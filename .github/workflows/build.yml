@@ -1,0 +1,24 @@
+name: Build-Release
+on:
+  push:
+    tags: [ 'v*' ] # 只有推送 v1.0 等标签时才触发构建
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with: { go-version: '1.21' }
+      - name: Build Multi-Platform
+        run: |
+          mkdir release
+          GOOS=linux GOARCH=amd64 go build -o release/tunnel-linux-amd64 main.go
+          GOOS=darwin GOARCH=arm64 go build -o release/tunnel-macos-arm64 main.go
+          GOOS=windows GOARCH=amd64 go build -o release/tunnel-win-amd64.exe main.go
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
